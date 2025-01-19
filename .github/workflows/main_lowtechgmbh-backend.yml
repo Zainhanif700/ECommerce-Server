@@ -13,12 +13,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # Step to set up Java (ensure to specify the distribution)
+    # Step to set up Java (updated distribution to 'temurin')
     - name: Set up Java
       uses: actions/setup-java@v2
       with:
         java-version: '17'  # Specify the Java version you need
-        distribution: 'adoptopenjdk'  # Specify the distribution
+        distribution: 'temurin'  # Use 'temurin' instead of 'adoptopenjdk'
 
     # Step to build the JAR file
     - name: Build the JAR file
