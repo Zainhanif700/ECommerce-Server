@@ -1,3 +1,6 @@
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+
 name: Build and deploy container app to Azure Web App - lowtechgmbh-backend
 
 on:
@@ -11,36 +14,39 @@ jobs:
     runs-on: 'ubuntu-latest'
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-    # Step to set up Java (updated distribution to 'temurin')
-    - name: Set up Java
+    # Set up JDK 17 to build the project
+    - name: Set up JDK 17
       uses: actions/setup-java@v2
       with:
-        java-version: '17'  # Specify the Java version you need
-        distribution: 'temurin'  # Use 'temurin' instead of 'adoptopenjdk'
+        java-version: '17'
 
-    # Step to build the JAR file
-    - name: Build the JAR file
-      run: |
-        mvn clean install  # or gradle build if using Gradle
+    # Build the project using Maven (skip tests for now)
+    - name: Build the project with Maven
+      run: mvn clean install -DskipTests
 
+    # Set up Docker Buildx
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: Log in to Docker registry
+    # Log in to Docker registry
+    - name: Log in to registry
       uses: docker/login-action@v2
       with:
         registry: https://index.docker.io/v1/
         username: ${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}
         password: ${{ secrets.AzureAppService_ContainerPassword_2e93c03605fd4921b6b5828b3e94ef1f }}
 
+    # Build and push the Docker image to Docker registry
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/lowtechgmbh-backend:${{ github.sha }}
+        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/zainhanif73/lowtechgmbh-backend:${{ github.sha }}
         file: ./Dockerfile
+        context: .
 
   deploy:
     runs-on: ubuntu-latest
@@ -57,4 +63,4 @@ jobs:
         app-name: 'lowtechgmbh-backend'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_67b85039c2644c79986df26c83baae35 }}
-        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/lowtechgmbh-backend:${{ github.sha }}'
+        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/zainhanif73/lowtechgmbh-backend:${{ github.sha }}'
