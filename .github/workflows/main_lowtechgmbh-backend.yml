@@ -35,6 +35,9 @@ jobs:
         echo "Listing contents of target directory:"
         ls -al target/  # List all files in the target directory to verify the JAR location
 
+    - name: Check working directory
+      run: pwd  # Ensure the working directory is correct
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
@@ -50,6 +53,7 @@ jobs:
       with:
         push: true
         tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/zainhanif73/lowtechgmbh-backend:${{ github.sha }}
+        context: .  # Set the build context to the root of the repository
         file: ./Dockerfile
 
   deploy:
