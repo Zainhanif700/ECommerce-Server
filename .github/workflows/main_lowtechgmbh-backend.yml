@@ -13,11 +13,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # Step to set up Java (assuming you're using Maven to build the JAR)
+    # Step to set up Java (ensure to specify the distribution)
     - name: Set up Java
       uses: actions/setup-java@v2
       with:
-        java-version: '17'
+        java-version: '17'  # Specify the Java version you need
+        distribution: 'adoptopenjdk'  # Specify the distribution
 
     # Step to build the JAR file
     - name: Build the JAR file
@@ -56,4 +57,4 @@ jobs:
         app-name: 'lowtechgmbh-backend'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_67b85039c2644c79986df26c83baae35 }}
-        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/lowtechgmbh-backend:${{ github.sha }}'
+        images: 'index.docker.io/${{ secrets.AzureAppService
