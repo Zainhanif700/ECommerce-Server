@@ -13,14 +13,24 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # Set up JDK for Maven build
-    - name: Set up JDK 17
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to registry
+      uses: docker/login-action@v2
+      with:
+        registry: https://index.docker.io/v1/
+        username: ${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}
+        password: ${{ secrets.AzureAppService_ContainerPassword_2e93c03605fd4921b6b5828b3e94ef1f }}
+
+    # This is where you might have the issue with the JDK setup.
+    - name: Set up JDK 17 (adoptopenjdk)
       uses: actions/setup-java@v2
       with:
         java-version: '17'
         distribution: 'adoptopenjdk'
 
-    # Cache dependencies to speed up the build
+    # Cache Maven dependencies
     - name: Cache Maven dependencies
       uses: actions/cache@v2
       with:
@@ -29,23 +39,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-maven-
 
-    # Build Maven project (This step will create the target/ecommerce-0.0.1-SNAPSHOT.jar file)
+    # Build the project with Maven
     - name: Build with Maven
       run: mvn clean install -DskipTests
 
-    # Set up Docker Buildx
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-
-    # Log in to Docker registry
-    - name: Log in to registry
-      uses: docker/login-action@v2
-      with:
-        registry: https://index.docker.io/v1/
-        username: ${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}
-        password: ${{ secrets.AzureAppService_ContainerPassword_2e93c03605fd4921b6b5828b3e94ef1f }}
-
-    # Build and push the Docker image
     - name: Build and push container image to registry
       uses: docker/build-push-action@v3
       with:
