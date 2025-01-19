@@ -23,12 +23,12 @@ jobs:
         username: ${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}
         password: ${{ secrets.AzureAppService_ContainerPassword_2e93c03605fd4921b6b5828b3e94ef1f }}
 
-    # This is where you might have the issue with the JDK setup.
-    - name: Set up JDK 17 (adoptopenjdk)
+    # Set up JDK 17 using Adoptium
+    - name: Set up JDK 17 (Adoptium)
       uses: actions/setup-java@v2
       with:
         java-version: '17'
-        distribution: 'adoptopenjdk'
+        distribution: 'temurin'
 
     # Cache Maven dependencies
     - name: Cache Maven dependencies
