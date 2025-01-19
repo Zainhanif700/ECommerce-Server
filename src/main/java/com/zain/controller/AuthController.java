@@ -1,19 +1,20 @@
 package com.zain.controller;
 
-import com.zain.Response.AuthResponse;
-import com.zain.Request.LoginRequest;
-import com.zain.config.JwtProvider;
+import com.zain.Request.LoginUserDto;
+import com.zain.Request.RegisterUserDto;
+import com.zain.Request.VerifyUserDto;
+import com.zain.Response.LoginResponse;
 import com.zain.exception.UserException;
 import com.zain.model.User;
 import com.zain.repository.UserRepository;
+import com.zain.service.AuthenticationService;
 import com.zain.service.CartService;
 import com.zain.service.CustomUserServiceImplementation;
-import org.springframework.http.HttpStatus;
+import com.zain.service.JwtService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -23,65 +24,60 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private UserRepository userRepository;
-    private JwtProvider jwtProvider;
+    private JwtService jwtProvider;
     private PasswordEncoder passwordEncoder;
     private CustomUserServiceImplementation customUserServiceImplementation;
     private CartService cartService;
 
-    public AuthController(CartService cartService, UserRepository userRepository, CustomUserServiceImplementation customUserServiceImplementation, PasswordEncoder passwordEncoder, JwtProvider jwtProvider){
+    private final JwtService jwtService;
+    private final AuthenticationService authenticationService;
+
+    public AuthController(CartService cartService, UserRepository userRepository, CustomUserServiceImplementation customUserServiceImplementation, PasswordEncoder passwordEncoder, JwtService jwtProvider, JwtService jwtService, AuthenticationService authenticationService){
         this.userRepository = userRepository;
         this.cartService = cartService;
         this.passwordEncoder = passwordEncoder;
         this.jwtProvider = jwtProvider;
         this.customUserServiceImplementation = customUserServiceImplementation;
+        this.jwtService = jwtService;
+        this.authenticationService = authenticationService;
     }
+
+    @PostMapping("/verify")
+    public ResponseEntity<String> verifyUser(@RequestBody VerifyUserDto verifyUserDto) {
+        try {
+            authenticationService.verifyUser(verifyUserDto);
+            return ResponseEntity.ok("Account verified successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/resend")
+    public ResponseEntity<String> resendVerificationCode(@RequestParam String email) {
+        try {
+            authenticationService.resendVerificationCode(email);
+            return ResponseEntity.ok("Verification code sent");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody User user) throws UserException {
-        String email = user.getEmail();
-        String password = user.getPassword();
-        String firstName = user.getFirstName();
-        String lastName = user.getLastName();
+    public ResponseEntity<User> createUserHandler(@RequestBody RegisterUserDto user) throws UserException {
 
-        User isEmailExist = userRepository.findByEmail(email);
-        if (isEmailExist != null){
-             throw new UserException("Email Already Exists");
-        }
-
-        else{
-            User createdUser = new User();
-            createdUser.setEmail(email);
-            createdUser.setPassword(passwordEncoder.encode(password));
-            createdUser.setFirstName(firstName);
-            createdUser.setLastName(lastName);
-            User savedUser = userRepository.save(createdUser);
-            System.out.println(createdUser);
-            cartService.createCart(savedUser);
-            Authentication auth = new UsernamePasswordAuthenticationToken(savedUser.getEmail(), savedUser.getPassword());
-            SecurityContextHolder.getContext().setAuthentication(auth);
-
-            String token = jwtProvider.generateToken(auth);
-
-            AuthResponse authResponse = new AuthResponse();
-            authResponse.setJwt(token);
-            authResponse.setMessage("Signup Success");
-            return new ResponseEntity<AuthResponse>(authResponse, HttpStatus.CREATED);
-        }
-
+        User registeredUser = authenticationService.signup(user);
+        cartService.createCart(registeredUser);
+        return ResponseEntity.ok(registeredUser);
     }
+
     @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/signin")
-    public ResponseEntity<AuthResponse> loginUserHandler(@RequestBody LoginRequest loginRequest) throws UserException {
-        String username = loginRequest.getEmail();
-        String password = loginRequest.getPassword();
-        Authentication auth = authenticate(username, password);
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        String token = jwtProvider.generateToken(auth);
-
-        AuthResponse authResponse = new AuthResponse();
-        authResponse.setJwt(token);
-        authResponse.setMessage("Signin Success");
-
-        return new ResponseEntity<AuthResponse>(authResponse, HttpStatus.OK);
+    public ResponseEntity<LoginResponse> loginUserHandler(@RequestBody LoginUserDto loginRequest) throws UserException {
+        User authenticatedUser = authenticationService.authenticate(loginRequest);
+        System.out.println("Login----: " + authenticatedUser);
+        String jwtToken = jwtService.generateToken(authenticatedUser);
+        LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
+        return ResponseEntity.ok(loginResponse);
     }
 
     private Authentication authenticate(String username, String password) {

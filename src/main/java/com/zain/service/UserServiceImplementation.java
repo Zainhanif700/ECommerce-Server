@@ -1,6 +1,5 @@
 package com.zain.service;
 
-import com.zain.config.JwtProvider;
 import com.zain.exception.UserException;
 import com.zain.model.User;
 import com.zain.repository.UserRepository;
@@ -12,9 +11,9 @@ import java.util.Optional;
 public class UserServiceImplementation implements UserService {
 
     private UserRepository userRepository;
-    private JwtProvider jwtProvider;
+    private JwtService jwtProvider;
 
-    public UserServiceImplementation(UserRepository userRepository, JwtProvider jwtProvider) {
+    public UserServiceImplementation(UserRepository userRepository, JwtService jwtProvider) {
         this.userRepository = userRepository;
         this.jwtProvider = jwtProvider;
     }
@@ -29,7 +28,18 @@ public class UserServiceImplementation implements UserService {
     }
 
     @Override
+    public User findUserByUserName(String userName) throws UserException {
+        Optional<User> user = Optional.ofNullable(userRepository.findByUsername(userName));
+        if (user.isPresent()) {
+            return user.get();
+        }
+        throw new UserException("User not found with userName: "+ userName);
+    }
+
+
+    @Override
     public User findUserProfileByJwt(String jwt) throws UserException {
+        System.out.println("user");
         String email = jwtProvider.getEmailFromToken(jwt);
         User user = userRepository.findByEmail(email);
         if (user == null) {

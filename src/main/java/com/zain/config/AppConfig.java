@@ -1,53 +1,46 @@
 package com.zain.config;
 
-import com.zain.service.CustomUserServiceImplementation;
-import jakarta.servlet.http.HttpServletRequest;
+import com.zain.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 
-import java.util.Arrays;
-import java.util.Collections;
 
 @Configuration
 public class AppConfig {
+    private final UserRepository userRepository;
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeHttpRequests(Authorize -> Authorize.requestMatchers("/api/**")
-                        .authenticated()
-                        .anyRequest().permitAll()).addFilterBefore(new JwtValidator(), BasicAuthenticationFilter.class)
-                .csrf().disable()
-                .cors().configurationSource(new CorsConfigurationSource() {
-                    @Override
-                    public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-                        CorsConfiguration config = new CorsConfiguration();
-                        config.setAllowedOrigins(Arrays.asList("http://localhost:5173/", "https://ecommerce-gb4wc4ok4-zainhanif73s-projects.vercel.app/", "http://localhost:4200/"));
-                        config.setAllowedMethods(Collections.singletonList("*"));
-                        config.setAllowCredentials(true);
-                        config.setAllowedHeaders(Collections.singletonList("*"));
-                        config.setExposedHeaders(Arrays.asList("Authorization"));
-                        config.setMaxAge(3600L);
-                        return config;
-                    }
-                })
-                .and().httpBasic().and().formLogin();
-        return http.build();
+    public AppConfig(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    UserDetailsService userDetailsService() {
+        return username -> userRepository.findByEmail(username);
+    }
+
+    @Bean
+    BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+
+        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setPasswordEncoder(passwordEncoder());
+
+        return authProvider;
+    }
 }
