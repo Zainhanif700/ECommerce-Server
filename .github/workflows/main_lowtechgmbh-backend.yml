@@ -30,7 +30,7 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/zainhanif73/lowtechgmbh-backend:${{ github.sha }}
+        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/lowtechgmbh-backend:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
