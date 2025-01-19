@@ -13,22 +13,32 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    # Step to set up Java (updated distribution to 'temurin')
-    - name: Set up Java
+    - name: Set up JDK 17 (Temurin)
       uses: actions/setup-java@v2
       with:
-        java-version: '17'  # Specify the Java version you need
-        distribution: 'temurin'  # Use 'temurin' instead of 'adoptopenjdk'
+        java-version: '17'
+        distribution: 'temurin'
 
-    # Step to build the JAR file
-    - name: Build the JAR file
+    - name: Cache Maven dependencies
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Build with Maven
+      run: mvn clean install -DskipTests  # Ensure build completes successfully
+
+    - name: List files in target directory
       run: |
-        mvn clean install  # or gradle build if using Gradle
+        echo "Listing contents of target directory:"
+        ls -al target/  # List all files in the target directory to verify the JAR location
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: Log in to Docker registry
+    - name: Log in to registry
       uses: docker/login-action@v2
       with:
         registry: https://index.docker.io/v1/
@@ -39,7 +49,7 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         push: true
-        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/lowtechgmbh-backend:${{ github.sha }}
+        tags: index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/zainhanif73/lowtechgmbh-backend:${{ github.sha }}
         file: ./Dockerfile
 
   deploy:
@@ -57,4 +67,4 @@ jobs:
         app-name: 'lowtechgmbh-backend'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_67b85039c2644c79986df26c83baae35 }}
-        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/lowtechgmbh-backend:${{ github.sha }}'
+        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_9eac888fe65240a381b00f0b2bfbe492 }}/zainhanif73/lowtechgmbh-backend:${{ github.sha }}'
