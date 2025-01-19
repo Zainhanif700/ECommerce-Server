@@ -1,0 +1,52 @@
+# Deployment for Spring Boot Application
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-backend
+  labels:
+    app: spring-boot-backend
+spec:
+  replicas: 2  # Number of pods
+  selector:
+    matchLabels:
+      app: spring-boot-backend
+  template:
+    metadata:
+      labels:
+        app: spring-boot-backend
+    spec:
+      containers:
+        - name: spring-boot-container
+          image: zainhanif73/lowtechgmbh-backend:latest  # Replace with your Docker Hub image
+          ports:
+            - containerPort: 8080  # Port exposed by the container
+          env:  # Injecting environment variables
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://lowtechgmbh-mysql.mysql.database.azure.com:3306/production_docker?useSSL=true"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "lowtechgmbh"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "hello@123"
+            - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+              value: "update"  # Optional, depending on your app's needs
+          resources:  # Optional resource limits
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+---
+# Service to Expose the Application
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-boot-service
+spec:
+  selector:
+    app: spring-boot-backend
+  ports:
+    - protocol: TCP
+      port: 80         # Port accessible externally
+      targetPort: 8080 # Port inside the container
+  type: LoadBalancer   # Exposes the service with an external IP
