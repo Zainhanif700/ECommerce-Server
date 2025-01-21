@@ -10,7 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -20,8 +22,26 @@ public class AdminProductController {
     private ProductService productService;
 
     @PostMapping("/")
-    public ResponseEntity<Product> createProduct(@RequestBody CreateProductRequest product) {
-        Product newProduct = productService.createProduct(product);
+    public ResponseEntity<Product> createProduct(
+            @RequestParam("image") MultipartFile image,
+            @RequestParam("title") String title,
+            @RequestParam("brand") String brand,
+            @RequestParam("color") String color,
+            @RequestParam("discountedPrice") int discountedPrice,
+            @RequestParam("price") int price,
+            @RequestParam("discountPersent") int discountPersent,
+            @RequestParam("size") String sizeJson,
+            @RequestParam("quantity") Integer quantity,
+            @RequestParam("topLavelCategory") String topLavelCategory,
+            @RequestParam("secondLavelCategory") String secondLavelCategory,
+            @RequestParam("thirdLavelCategory") String thirdLavelCategory,
+            @RequestParam("description") String description
+    ) throws IOException {
+        Product newProduct = productService.createProduct(
+                image, title, brand, color, discountedPrice, price, discountPersent,
+                sizeJson, quantity, topLavelCategory, secondLavelCategory,
+                thirdLavelCategory, description
+        );
         return ResponseEntity.ok(newProduct);
     }
 
@@ -56,15 +76,6 @@ public class AdminProductController {
         Product product = productService.updateProduct(productId, req);
         return ResponseEntity.ok(product);
     }
-
-   @PostMapping("/creates")
-   public ResponseEntity<String> createMultipleProducts(@RequestBody CreateProductRequest[] req) {
-        for (CreateProductRequest product : req){
-            productService.createProduct(product);
-        }
-        return ResponseEntity.ok("Products Created Successfully");
-    }
-
     
 }
 

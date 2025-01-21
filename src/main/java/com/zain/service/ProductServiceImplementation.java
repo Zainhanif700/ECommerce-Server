@@ -1,21 +1,34 @@
 package com.zain.service;
 
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zain.Request.CreateProductRequest;
 import com.zain.exception.ProductException;
 import com.zain.model.Category;
 import com.zain.model.Product;
+import com.zain.model.Size;
 import com.zain.repository.CategoryRepository;
 import com.zain.repository.ProductRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +38,12 @@ public class ProductServiceImplementation implements ProductService {
     private CategoryRepository categoryRepository;
     private UserService userService;
 
+    @Value("${AZURE.CONTAINER}")
+    private String CONTAINER_NAME ;
+
+    @Value("${AZURE.KEY}")
+    private String CONNECTION_STRING;
+
     public ProductServiceImplementation(ProductRepository productRepository, CategoryRepository categoryRepository, UserService userService) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
@@ -32,50 +51,93 @@ public class ProductServiceImplementation implements ProductService {
     }
 
     @Override
-    public Product createProduct(CreateProductRequest req) {
-        Category topLevel = categoryRepository.findByName(req.getTopLavelCategory());
+    public Product createProduct( @RequestParam("image") MultipartFile image,
+                                  @RequestParam("title") String title,
+                                  @RequestParam("brand") String brand,
+                                  @RequestParam("color") String color,
+                                  @RequestParam("discountedPrice") int discountedPrice,
+                                  @RequestParam("price") int price,
+                                  @RequestParam("discountPersent") int discountPersent,
+                                  @RequestParam("size") String sizeJson,  // size will be a JSON string
+                                  @RequestParam("quantity") Integer quantity,
+                                  @RequestParam("topLavelCategory") String topLavelCategory,
+                                  @RequestParam("secondLavelCategory") String secondLavelCategory,
+                                  @RequestParam("thirdLavelCategory") String thirdLavelCategory,
+                                  @RequestParam("description") String description
+                            ) throws ProductException, IOException {
+        System.out.println(title + "  " + color + "  " + discountedPrice + "  " + price + "  " + discountPersent
+                + " " + sizeJson + " " + quantity + " " + topLavelCategory + " " + secondLavelCategory + " " +
+                thirdLavelCategory + " " + description
+        );
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<Size> sizesList = null;
+        try {
+            sizesList = objectMapper.readValue(sizeJson, new TypeReference<List<Size>>() {});
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Set<Size> sizesSet = new HashSet<>(sizesList);
+
+        String imageUrl = uploadImageToAzure(image);
+        Category topLevel = categoryRepository.findByName(topLavelCategory);
 
         if (topLevel == null) {
             Category topLevelCategory = new Category();
-            topLevelCategory.setName(req.getTopLavelCategory());
+            topLevelCategory.setName(topLavelCategory);
             topLevelCategory.setLevel(1);
             topLevel = categoryRepository.save(topLevelCategory);
         }
 
-        Category secondLevel = categoryRepository.findByNameAndParent(req.getSecondLavelCategory(), topLevel.getName());
+        Category secondLevel = categoryRepository.findByNameAndParent(secondLavelCategory, topLevel.getName());
         if (secondLevel == null) {
             Category secondLevelCategory = new Category();
-            secondLevelCategory.setName(req.getSecondLavelCategory());
+            secondLevelCategory.setName(secondLavelCategory);
             secondLevelCategory.setLevel(2);
             secondLevelCategory.setParentCategory(topLevel);
             secondLevel = categoryRepository.save(secondLevelCategory);
         }
 
-        Category thirdLevel = categoryRepository.findByNameAndParent(req.getThirdLavelCategory(), secondLevel.getName());
+        Category thirdLevel = categoryRepository.findByNameAndParent(thirdLavelCategory, secondLevel.getName());
         if (thirdLevel == null) {
             Category thirdLevelCategory = new Category();
-            thirdLevelCategory.setName(req.getThirdLavelCategory());
+            thirdLevelCategory.setName(thirdLavelCategory);
             thirdLevelCategory.setLevel(3);
             thirdLevelCategory.setParentCategory(secondLevel);
             thirdLevel = categoryRepository.save(thirdLevelCategory);
         }
 
         Product product = new Product();
-        product.setTitle(req.getTitle());
-        product.setColor(req.getColor());
-        product.setDescription(req.getDescription());
-        product.setDiscountedPrice(req.getDiscountedPrice());
-        product.setDiscountedPersent(req.getDiscountPersent());
-        product.setImageUrl(req.getImageUrl());
-        product.setImageUrl(req.getImageUrl());
-        product.setPrice(req.getPrice());
-        product.setSizes(req.getSize());
-        product.setQuantity(req.getQuantity());
+        product.setTitle(title);
+        product.setColor(color);
+        product.setDescription(description);
+        product.setDiscountedPrice(discountedPrice);
+        product.setDiscountedPersent(discountPersent);
+        product.setImageUrl(imageUrl);
+        product.setPrice(price);
+        product.setSizes(sizesSet);
+        product.setQuantity(quantity);
         product.setCategory(thirdLevel);
         product.setCreationAt(LocalDateTime.now());
 
         Product saveProduct = productRepository.save(product);
         return saveProduct;
+    }
+
+    public String uploadImageToAzure(MultipartFile image) throws IOException {
+        BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
+                .connectionString(CONNECTION_STRING)
+                .buildClient();
+
+        BlobContainerClient containerClient = blobServiceClient.getBlobContainerClient(CONTAINER_NAME);
+        String fileName = System.currentTimeMillis() + "-" + image.getOriginalFilename();
+        BlobClient blobClient = containerClient.getBlobClient(fileName);
+        try (InputStream inputStream = image.getInputStream()) {
+            blobClient.upload(inputStream, image.getSize(), true);
+        }
+        System.out.println("blobClient.getBlobUrl() "+ blobClient.getBlobUrl());
+        return blobClient.getBlobUrl();
     }
 
     @Override
