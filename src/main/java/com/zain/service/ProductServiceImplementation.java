@@ -126,6 +126,7 @@ public class ProductServiceImplementation implements ProductService {
     }
 
     public String uploadImageToAzure(MultipartFile image) throws IOException {
+
         BlobServiceClient blobServiceClient = new BlobServiceClientBuilder()
                 .connectionString(CONNECTION_STRING)
                 .buildClient();
