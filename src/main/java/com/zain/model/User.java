@@ -36,7 +36,7 @@ public class User implements UserDetails {
     private boolean enabled = false;
     private LocalDateTime verificationCodeExpiresAt;
 
-    private String role;
+    private String role = "USER";
 
     private String mobile;
 
@@ -95,7 +95,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of();
+        return List.of(() -> "ROLE_" + this.role);
     }
 
     @Override

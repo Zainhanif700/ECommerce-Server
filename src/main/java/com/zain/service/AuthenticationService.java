@@ -45,8 +45,8 @@ public class AuthenticationService {
         user.setFirstName(input.getFirstName());
         user.setLastName(input.getLastName());
         user.setMobile(input.getMobile());
+        user.setRole("USER");
         user.setCreateAt(LocalDateTime.now());
-        System.out.println("User to be saved: " + user);
         sendVerificationEmail(user);
         return userRepository.save(user);
     }

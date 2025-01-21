@@ -34,7 +34,7 @@ public class SecurityConfiguration {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/auth/**", "/products", "/products/id/{productId}").permitAll()
+                        .requestMatchers("/auth/**", "/api/products", "/api/products/id/{productId}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -46,16 +46,17 @@ public class SecurityConfiguration {
         return http.build();
     }
 
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net")); // Specific origin
+        configuration.setAllowedOrigins(List.of("http://localhost:5173","https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net")); // Specific origin
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed HTTP methods
-        configuration.setAllowedHeaders(List.of("*")); // Allow all headers
-        configuration.setAllowCredentials(true); // Allow cookies or authentication headers
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // Apply to all endpoints
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 }
