@@ -49,7 +49,7 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net/")); // Specific origin
+        configuration.setAllowedOrigins(List.of("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net")); // Specific origin
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed HTTP methods
         configuration.setAllowedHeaders(List.of("*")); // Allow all headers
         configuration.setAllowCredentials(true); // Allow cookies or authentication headers
