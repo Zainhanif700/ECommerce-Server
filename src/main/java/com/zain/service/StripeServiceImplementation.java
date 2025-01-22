@@ -6,6 +6,9 @@ import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import com.zain.Request.StripeProductRequest;
 import com.zain.Response.StripeResponse;
+import com.zain.model.User;
+import jakarta.mail.MessagingException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +16,12 @@ import org.springframework.stereotype.Service;
 public class StripeServiceImplementation implements StripeService {
     @Value("${STRIPE.SKEY}")
     private String secreteKey;
+
+    private final EmailService emailService;
+
+    public StripeServiceImplementation(EmailService emailService) {
+        this.emailService = emailService;
+    }
 
     @Override
     public StripeResponse checkoutProducts(StripeProductRequest request, Integer orderId) {
@@ -55,4 +64,5 @@ public class StripeServiceImplementation implements StripeService {
                 .sessionUrl(session.getUrl())
                 .build();
     }
+
 }

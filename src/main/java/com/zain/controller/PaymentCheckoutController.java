@@ -15,7 +15,6 @@ public class PaymentCheckoutController {
 
     @PostMapping("/{orderId}")
     public ResponseEntity<StripeResponse> checkoutProducts(@PathVariable Integer orderId,  @RequestBody StripeProductRequest stripeProductRequest) {
-        System.out.println(stripeProductRequest);
         StripeResponse stripeResponse = stripeService.checkoutProducts(stripeProductRequest, orderId);
         return ResponseEntity.ok(stripeResponse);
     }
