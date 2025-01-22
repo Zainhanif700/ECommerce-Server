@@ -43,8 +43,8 @@ public class StripeServiceImplementation implements StripeService {
                         .setPriceData(priceData).build();
 
         SessionCreateParams params = SessionCreateParams.builder().setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:5173/payment/"+orderId)
-                .setCancelUrl("http://localhost:5173/payment/cancel")
+                .setSuccessUrl("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net/payment/"+orderId)
+                .setCancelUrl("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net/payment/cancel")
                 .putMetadata("order_id", String.valueOf(orderId)) // Include metadata
                 .addLineItem(lineItem).build();
 
