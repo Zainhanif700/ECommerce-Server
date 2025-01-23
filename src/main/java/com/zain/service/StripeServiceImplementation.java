@@ -41,11 +41,11 @@ public class StripeServiceImplementation implements StripeService {
                 SessionCreateParams.LineItem.builder()
                         .setQuantity(request.getQuantity())
                         .setPriceData(priceData).build();
-
+        System.out.println("Coming Here ");
         SessionCreateParams params = SessionCreateParams.builder().setMode(SessionCreateParams.Mode.PAYMENT)
                 .setSuccessUrl("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net/payment/"+orderId)
                 .setCancelUrl("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net/payment/cancel")
-                .putMetadata("order_id", String.valueOf(orderId)) // Include metadata
+                .putMetadata("order_id", String.valueOf(orderId))
                 .addLineItem(lineItem).build();
 
         Session session = null;
