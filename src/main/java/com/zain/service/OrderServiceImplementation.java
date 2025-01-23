@@ -5,6 +5,7 @@ import com.zain.model.*;
 import com.zain.repository.*;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -131,5 +132,18 @@ public class OrderServiceImplementation implements OrderService{
     @Override
     public void deleteOrder(Long orderID) throws OrderException {
         orderRepository.deleteById(orderID);
+    }
+
+    @Override
+    public void updatePaymentStatus(Long orderId, String paymentId, String status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        order.getPaymentDetails().setStatus(status);
+        order.getPaymentDetails().setPaymentId(paymentId);
+        order.setOrderStatus("CONFIRMED");
+        order.setDeliveryDate(LocalDate.now().plusDays(7).atStartOfDay()); // Example delivery date
+
+        orderRepository.save(order);
     }
 }

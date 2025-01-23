@@ -1,50 +1,54 @@
 package com.zain.controller;
 
+import com.stripe.Stripe;
 import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.exception.SignatureVerificationException;
+import com.zain.service.OrderService;
+import lombok.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@RestController("/api/payment")
 public class StripeWebhookController {
 
-    // Webhook secret from Stripe (replace with your actual secret)
-    private static final String WEBHOOK_SECRET = "whsec_c5c1e6dc51dffe75f7a3da652a2b3fd9f5457b2f2e7b77340ec046d24e142faf";
+    private String secretKey= "sk_test_51QYukKJ17QcbZNaeTtwp039lOYzgV560GWufxyyvrJTmYcexBwXuhxRZ7ZMN5Vt2q3itcc1eQcYpT38fmDfn5bcT00JjJkrMVE";
+
+    private String endpointSecret = "whsec_esoe9jRnxS660rdE4fGVfyI1MLTZZrYM";
+
+    private final OrderService orderService;
+
+    public StripeWebhookController(OrderService orderService) {
+        this.orderService = orderService;
+    }
 
     @PostMapping("/webhook")
-    public ResponseEntity<String> handleStripeEvent(@RequestBody String payload,
-                                                    @RequestHeader("Stripe-Signature") String sigHeader) {
+    public ResponseEntity<String> handleWebhook(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) {
+        Stripe.apiKey = secretKey;
+
         Event event;
         try {
-            event = Webhook.constructEvent(payload, sigHeader, WEBHOOK_SECRET);
+            event = Webhook.constructEvent(payload, sigHeader, endpointSecret);
         } catch (SignatureVerificationException e) {
-            System.err.println("Webhook signature verification failed: " + e.getMessage());
-            return ResponseEntity.status(400).body("Invalid signature");
-        } catch (Exception e) {
-            System.err.println("Error processing webhook: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error processing webhook: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid signature");
         }
 
-        System.out.println("Received event: " + event.getType());
+        // Handle specific event types
+        if ("checkout.session.completed".equals(event.getType())) {
+            Session session = (Session) event.getData().getObject();
+            String orderId = session.getMetadata().get("order_id");
+            String paymentId = session.getPaymentIntent();
 
-        if ("payment_intent.succeeded".equals(event.getType())) {
-            PaymentIntent paymentIntent = (PaymentIntent) event.getData().getObject();
-            System.out.println(paymentIntent);
-            System.out.println("PaymentIntent was successful! ID: " + paymentIntent.getId());
-            System.out.println("Amount received: " + paymentIntent.getAmountReceived() / 100.0 + " USD");
-            // You can now update your database with the payment intent information.
-
-        } else {
-            System.out.println("Unhandled event type: " + event.getType());
+            System.out.println("Hook Called "+ session + " with orderId " + orderId + " and paymentId " + paymentId);
+            orderService.updatePaymentStatus(Long.parseLong(orderId), paymentId, "COMPLETED");
         }
 
-        // Acknowledge receipt of the event
-        return ResponseEntity.ok("Webhook received!");
+        return ResponseEntity.ok("Webhook received");
     }
 }

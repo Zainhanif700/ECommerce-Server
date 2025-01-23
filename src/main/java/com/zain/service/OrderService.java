@@ -29,4 +29,6 @@ public interface OrderService {
 
     public void deleteOrder(Long orderID) throws OrderException;
 
+    public void updatePaymentStatus(Long orderId, String paymentId, String status);
+
 }
