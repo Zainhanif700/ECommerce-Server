@@ -39,13 +39,13 @@ public class StripeWebhookController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid signature");
         }
 
-        // Handle specific event types
+        // Check if the event is of type 'checkout.session.completed'
         if ("checkout.session.completed".equals(event.getType())) {
             Session session = (Session) event.getData().getObject();
             String orderId = session.getMetadata().get("order_id");
             String paymentId = session.getPaymentIntent();
 
-            System.out.println("Hook Called "+ session + " with orderId " + orderId + " and paymentId " + paymentId);
+            // Update the payment status
             orderService.updatePaymentStatus(Long.parseLong(orderId), paymentId, "COMPLETED");
         }
 
