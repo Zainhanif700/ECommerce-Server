@@ -6,6 +6,8 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import com.stripe.exception.SignatureVerificationException;
+import com.zain.service.CartItemService;
+import com.zain.service.CartService;
 import com.zain.service.OrderService;
 import lombok.Value;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,8 @@ public class StripeWebhookController {
 
     @Autowired
     OrderService orderService;
+    @Autowired
+    private CartItemService cartItemService;
 
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(@RequestBody String payload, @RequestHeader("Stripe-Signature") String sigHeader) {
@@ -50,7 +54,6 @@ public class StripeWebhookController {
                 Long parsedOrderId = Long.parseLong(orderId);
                 String paymentId = session.getPaymentIntent();
 
-                System.out.println("Payment successful: Order ID: " + parsedOrderId + ", Payment ID: " + paymentId);
                 orderService.updatePaymentStatus(parsedOrderId, paymentId, "COMPLETED");
 
             } catch (NumberFormatException e) {

@@ -34,7 +34,6 @@ public class EmailController {
 
     @PostMapping("/confirmOrder")
     public ResponseEntity<String> ConfirmOrder(@RequestBody ConfirmedOrder confirmedOrder) throws OrderException, UserException {
-        System.out.println("Checking Confirmed Order");
         String subject = "Order Confirmation - Order #" + confirmedOrder.getId();
         String htmlMessage = "<html>"
                 + "<body style=\"font-family: Arial, sans-serif;\">"
