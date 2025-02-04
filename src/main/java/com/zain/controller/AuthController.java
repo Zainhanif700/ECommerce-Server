@@ -70,7 +70,6 @@ public class AuthController {
         return ResponseEntity.ok(registeredUser);
     }
 
-    @CrossOrigin(origins = "http://localhost:5173")
     @PostMapping("/signin")
     public ResponseEntity<LoginResponse> loginUserHandler(@RequestBody LoginUserDto loginRequest) throws UserException {
         User authenticatedUser = authenticationService.authenticate(loginRequest);
