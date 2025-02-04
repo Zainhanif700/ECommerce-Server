@@ -67,4 +67,4 @@ jobs:
         app-name: 'lowtechgmbhbackend'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_50968591d484423db4be35d5c899cf6a }}
-        images: 'index.docker.io/${{ secrets.AzureAppService_ContainerUsername_fb82d738c48449b19376a3fb7ab12a44 }}/zainhanif73/lowtechgmbh-backend:${{ github.sha }}'
+        images: 'index.docker.io/zainhanif73/lowtechgmbh-backend:${{ github.sha }}'
