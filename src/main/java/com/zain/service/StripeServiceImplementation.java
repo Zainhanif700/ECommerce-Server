@@ -6,9 +6,6 @@ import com.stripe.model.checkout.Session;
 import com.stripe.param.checkout.SessionCreateParams;
 import com.zain.Request.StripeProductRequest;
 import com.zain.Response.StripeResponse;
-import com.zain.model.User;
-import jakarta.mail.MessagingException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -42,8 +39,8 @@ public class StripeServiceImplementation implements StripeService {
                         .setQuantity(request.getQuantity())
                         .setPriceData(priceData).build();
         SessionCreateParams params = SessionCreateParams.builder().setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net/payment/"+orderId)
-                .setCancelUrl("https://lowtechgmbh-d4hbh6dqcza7b0bf.canadacentral-01.azurewebsites.net/payment/cancel")
+                .setSuccessUrl("https://lowtechgmbh-frontend-a5a6gvdafpfagqc9.germanywestcentral-01.azurewebsites.net/payment/"+orderId)
+                .setCancelUrl("https://lowtechgmbh-frontend-a5a6gvdafpfagqc9.germanywestcentral-01.azurewebsites.net/payment/cancel")
                 .putMetadata("order_id", String.valueOf(orderId))
                 .addLineItem(lineItem).build();
 
