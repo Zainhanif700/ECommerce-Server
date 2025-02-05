@@ -73,7 +73,6 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<LoginResponse> loginUserHandler(@RequestBody LoginUserDto loginRequest) throws UserException {
         User authenticatedUser = authenticationService.authenticate(loginRequest);
-        System.out.println("Login----: " + authenticatedUser);
         String jwtToken = jwtService.generateToken(authenticatedUser);
         LoginResponse loginResponse = new LoginResponse(jwtToken, jwtService.getExpirationTime());
         return ResponseEntity.ok(loginResponse);

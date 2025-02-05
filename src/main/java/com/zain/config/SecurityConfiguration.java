@@ -11,8 +11,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+import java.util.Arrays;
+import static org.springframework.security.config.Customizer.withDefaults;
 
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -31,8 +33,8 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(withDefaults()) // Use withDefaults() for Spring Security 6+
+                .csrf(csrf -> csrf.disable())  // Disable CSRF
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/auth/**", "/api/products", "/api/payment/stripe/webhook", "/api/products/id/{productId}").permitAll()
                         .anyRequest().authenticated()
@@ -50,16 +52,23 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
+        configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "https://lowtechgmbh-frontend-a5a6gvdafpfagqc9.germanywestcentral-01.azurewebsites.net"
-        )); // Specific origin
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Allowed HTTP methods
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-
+        ));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Explicitly allow OPTIONS
+        configuration.setAllowedHeaders(Arrays.asList("*")); // Or specify headers
+        configuration.setAllowCredentials(true);  // Important for sending credentials
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
+    //Crucially add this filter bean after the corsConfigurationSource
+    @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter(corsConfigurationSource());
+    }
+
+
 }
