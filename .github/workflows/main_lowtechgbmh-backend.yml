@@ -29,11 +29,11 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: 'https://index.docker.io/v1/'
-          username: >-
+          username:
             ${{
             secrets.AzureAppService_ContainerUsername_7f4e17ac885b459abb4c254f0f71468b
             }}
-          password: >-
+          password:
             ${{
             secrets.AzureAppService_ContainerPassword_6bb3b4685c2c43b7a8660e5c6439e406
             }}
@@ -57,8 +57,5 @@ jobs:
         with:
           app-name: lowtechgmbhbackend
           slot-name: production
-          publish-profile: >-
-            ${{
-            secrets.AzureAppService_PublishProfile_16883c5f573a4543bba885f97e20d499
-            }}
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_16883c5f573a4543bba885f97e20d499 }}
           images: 'index.docker.io/zainhanif73/lowtechgmbh-backend:${{ github.sha }}'
