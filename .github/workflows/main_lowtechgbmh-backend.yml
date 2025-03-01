@@ -60,7 +60,7 @@ jobs:
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
-        app-name: 'lowtechgmbhbackend'
+        app-name: 'lowtechgbmhbackend'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_16883c5f573a4543bba885f97e20d499 }}
         images: 'index.docker.io/zainhanif73/lowtechgmbh-backend:${{ github.sha }}'
