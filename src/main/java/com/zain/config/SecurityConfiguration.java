@@ -54,7 +54,7 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
-                "https://lowtechgmbh-frontend-a5a6gvdafpfagqc9.germanywestcentral-01.azurewebsites.net"
+                "https://lowtechgmbh-d4hbh6dqcza7b0bf.germanywestcentral-01.azurewebsites.net/"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS")); // Explicitly allow OPTIONS
         configuration.setAllowedHeaders(Arrays.asList("*")); // Or specify headers
